@@ -14,7 +14,7 @@ import { OrderModule } from './order/order.module';
       cache: true,
     }),
     ServeStaticModule.forRoot({
-      rootPath: path.join(__dirname, '..', 'public'),
+      rootPath: path.join(process.cwd(), 'public', 'content'),
       serveRoot: '/content',
     }),
     FilmsModule,

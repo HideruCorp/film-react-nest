@@ -7,7 +7,7 @@ import { FILMS_REPOSITORY } from '../repository/repository.module';
 export class FilmsService {
   constructor(
     @Inject(FILMS_REPOSITORY)
-    private readonly filmsRepository: IFilmsRepository
+    private readonly filmsRepository: IFilmsRepository,
   ) {}
 
   async findAll(): Promise<GetFilmsResponseDTO> {

@@ -12,7 +12,7 @@ import { FILMS_REPOSITORY } from '../repository/repository.module';
 export class OrderService {
   constructor(
     @Inject(FILMS_REPOSITORY)
-    private readonly filmsRepository: IFilmsRepository
+    private readonly filmsRepository: IFilmsRepository,
   ) {}
 
   async createOrder(dto: CreateOrderDTO): Promise<CreateOrderResponseDTO> {
