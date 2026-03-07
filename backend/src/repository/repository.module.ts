@@ -1,13 +1,15 @@
 import { Module } from '@nestjs/common';
-import { FilmsMemoryRepository } from './films.memory.repository';
+import { databaseProvider } from './films.mongo.provider';
+import { FilmsMongoRepository } from './films.mongo.repository';
 
 export const FILMS_REPOSITORY = 'FILMS_REPOSITORY';
 
 @Module({
   providers: [
+    databaseProvider,
     {
       provide: FILMS_REPOSITORY,
-      useClass: FilmsMemoryRepository,
+      useClass: FilmsMongoRepository,
     },
   ],
   exports: [FILMS_REPOSITORY],

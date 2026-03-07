@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDTO } from './dto/order.dto';
 
@@ -8,6 +8,7 @@ export class OrderController {
 
   // POST /api/afisha/order
   @Post()
+  @HttpCode(200)
   createOrder(@Body() dto: CreateOrderDTO) {
     return this.orderService.createOrder(dto);
   }
