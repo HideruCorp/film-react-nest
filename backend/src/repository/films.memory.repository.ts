@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { GetFilmDTO, GetScheduleDTO } from '../films/dto/films.dto';
+import { TicketDTO } from '../order/dto/order.dto';
 import { IFilmsRepository } from './films.repository.interface';
 
 import * as filmsStub from '../../test/mongodb_initial_stub.json';
@@ -35,5 +36,23 @@ export class FilmsMemoryRepository implements IFilmsRepository {
       price: s.price,
       taken: [...s.taken],
     }));
+  }
+
+  async bookTickets(tickets: TicketDTO[]): Promise<void> {
+    for (const ticket of tickets) {
+      const seatKey = `${ticket.row}:${ticket.seat}`;
+
+      const film = this.films.find((f) => f.id === ticket.film);
+      if (!film) throw new Error(`Фильм ${ticket.film} не найден`);
+
+      const session = film.schedule.find((s) => s.id === ticket.session);
+      if (!session) throw new Error(`Сеанс ${ticket.session} не найден`);
+
+      if (session.taken.includes(seatKey)) {
+        throw new Error(`Место ${seatKey} уже занято`);
+      }
+
+      session.taken.push(seatKey);
+    }
   }
 }
