@@ -3,10 +3,6 @@ import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { CreateOrderDTO, TicketDTO } from './dto/order.dto';
 
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-123'),
-}));
-
 describe('OrderController', () => {
   let controller: OrderController;
   let service: jest.Mocked<OrderService>;

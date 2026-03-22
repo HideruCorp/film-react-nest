@@ -1,14 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'node:crypto';
 import { OrderService } from './order.service';
 import { IFilmsRepository } from '../repository/films.repository.interface';
 import { FILMS_REPOSITORY } from '../repository/repository.module';
 import { CreateOrderDTO, TicketDTO } from './dto/order.dto';
-
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'test-uuid-123'),
-}));
 
 describe('OrderService', () => {
   let service: OrderService;
@@ -60,6 +56,7 @@ describe('OrderService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   it('should be defined', () => {
@@ -68,6 +65,9 @@ describe('OrderService', () => {
 
   describe('createOrder', () => {
     it('should create order successfully', async () => {
+      jest
+        .spyOn(crypto, 'randomUUID')
+        .mockReturnValue('11111111-1111-4111-8111-111111111111');
       mockRepository.bookTickets.mockResolvedValue(undefined);
 
       const result = await service.createOrder(mockOrderDTO);
@@ -99,6 +99,9 @@ describe('OrderService', () => {
     });
 
     it('should create order with single ticket', async () => {
+      jest
+        .spyOn(crypto, 'randomUUID')
+        .mockReturnValue('11111111-1111-4111-8111-111111111111');
       const singleTicketOrder: CreateOrderDTO = {
         email: 'test@example.com',
         phone: '+7 (123) 456-78-90',
@@ -153,9 +156,10 @@ describe('OrderService', () => {
     });
 
     it('should generate unique IDs for each ticket', async () => {
-      (uuidv4 as jest.Mock)
-        .mockReturnValueOnce('uuid-1')
-        .mockReturnValueOnce('uuid-2');
+      jest
+        .spyOn(crypto, 'randomUUID')
+        .mockReturnValueOnce('11111111-1111-4111-8111-111111111111')
+        .mockReturnValueOnce('22222222-2222-4222-8222-222222222222');
 
       mockRepository.bookTickets.mockResolvedValue(undefined);
 

@@ -84,8 +84,11 @@ describe('FilmsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of films', async () => {
-      mockRepository.findAll.mockResolvedValue(mockFilms);
+    it('should return { total, items } with all films from repository', async () => {
+      mockRepository.findAll.mockResolvedValue({
+        total: mockFilms.length,
+        items: mockFilms,
+      });
 
       const result = await service.findAll();
 
@@ -96,8 +99,8 @@ describe('FilmsService', () => {
       });
     });
 
-    it('should return empty array when no films exist', async () => {
-      mockRepository.findAll.mockResolvedValue([]);
+    it('should return { total: 0, items: [] } when repository has no films', async () => {
+      mockRepository.findAll.mockResolvedValue({ total: 0, items: [] });
 
       const result = await service.findAll();
 

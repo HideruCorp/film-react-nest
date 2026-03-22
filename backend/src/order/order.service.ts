@@ -5,7 +5,7 @@ import {
   CreateOrderResponseDTO,
   OrderResponseItemDTO,
 } from './dto/order.dto';
-import { v4 as uuidv4 } from 'uuid';
+import * as crypto from 'node:crypto';
 import { FILMS_REPOSITORY } from '../repository/repository.module';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class OrderService {
 
     const items: OrderResponseItemDTO[] = dto.tickets.map((ticket) => ({
       ...ticket,
-      id: uuidv4(),
+      id: crypto.randomUUID(),
     }));
 
     return { total: items.length, items };

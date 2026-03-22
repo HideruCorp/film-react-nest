@@ -6,11 +6,17 @@ import { FilmModel } from './films.mongo.schema';
 
 @Injectable()
 export class FilmsMongoRepository implements IFilmsRepository {
-  async findAll(limit?: number, offset?: number): Promise<{ total: number; items: GetFilmDTO[] }> {
+  async findAll(
+    limit?: number,
+    offset?: number,
+  ): Promise<{ total: number; items: GetFilmDTO[] }> {
     const query = FilmModel.find({});
     if (offset) query.skip(offset);
     if (limit) query.limit(limit);
-    const [films, total] = await Promise.all([query, FilmModel.countDocuments({})]);
+    const [films, total] = await Promise.all([
+      query,
+      FilmModel.countDocuments({}),
+    ]);
     const items = films.map((film) => ({
       id: film.id,
       rating: film.rating,
@@ -48,7 +54,9 @@ export class FilmsMongoRepository implements IFilmsRepository {
       else seen.add(key);
     }
     if (duplicates.size > 0) {
-      throw new Error(`Места ${[...duplicates].join(', ')} дублируются в заказе`);
+      throw new Error(
+        `Места ${[...duplicates].join(', ')} дублируются в заказе`,
+      );
     }
 
     await Promise.all(
