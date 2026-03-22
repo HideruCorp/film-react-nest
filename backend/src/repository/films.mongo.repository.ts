@@ -6,9 +6,12 @@ import { FilmModel } from './films.mongo.schema';
 
 @Injectable()
 export class FilmsMongoRepository implements IFilmsRepository {
-  async findAll(): Promise<GetFilmDTO[]> {
-    const films = await FilmModel.find({});
-    return films.map((film) => ({
+  async findAll(limit?: number, offset?: number): Promise<{ total: number; items: GetFilmDTO[] }> {
+    const query = FilmModel.find({});
+    if (offset) query.skip(offset);
+    if (limit) query.limit(limit);
+    const [films, total] = await Promise.all([query, FilmModel.countDocuments({})]);
+    const items = films.map((film) => ({
       id: film.id,
       rating: film.rating,
       director: film.director,
@@ -19,6 +22,7 @@ export class FilmsMongoRepository implements IFilmsRepository {
       image: film.image,
       cover: film.cover,
     }));
+    return { total, items };
   }
 
   async findSchedule(filmId: string): Promise<GetScheduleDTO[]> {
@@ -36,35 +40,48 @@ export class FilmsMongoRepository implements IFilmsRepository {
   }
 
   async bookTickets(tickets: TicketDTO[]): Promise<void> {
-    for (const ticket of tickets) {
-      const seatKey = `${ticket.row}:${ticket.seat}`;
-
-      const result = await FilmModel.findOneAndUpdate(
-        {
-          id: ticket.film,
-          'schedule.id': ticket.session,
-          'schedule.taken': { $nin: [seatKey] },
-        },
-        {
-          $addToSet: { 'schedule.$.taken': seatKey },
-        },
-        {
-          new: false,
-          projection: { _id: 1 },
-        },
-      );
-
-      if (!result) {
-        const film = await FilmModel.findOne({ id: ticket.film });
-        if (!film) {
-          throw new Error(`Фильм ${ticket.film} не найден`);
-        }
-        const session = film.schedule.find((s) => s.id === ticket.session);
-        if (!session) {
-          throw new Error(`Сеанс ${ticket.session} не найден`);
-        }
-        throw new Error(`Место ${seatKey} уже занято`);
-      }
+    const seatKeys = tickets.map((t) => `${t.row}:${t.seat}`);
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const key of seatKeys) {
+      if (seen.has(key)) duplicates.add(key);
+      else seen.add(key);
     }
+    if (duplicates.size > 0) {
+      throw new Error(`Места ${[...duplicates].join(', ')} дублируются в заказе`);
+    }
+
+    await Promise.all(
+      tickets.map(async (ticket) => {
+        const seatKey = `${ticket.row}:${ticket.seat}`;
+
+        const result = await FilmModel.findOneAndUpdate(
+          {
+            id: ticket.film,
+            'schedule.id': ticket.session,
+            'schedule.taken': { $nin: [seatKey] },
+          },
+          {
+            $addToSet: { 'schedule.$.taken': seatKey },
+          },
+          {
+            new: false,
+            projection: { _id: 1 },
+          },
+        );
+
+        if (!result) {
+          const film = await FilmModel.findOne({ id: ticket.film });
+          if (!film) {
+            throw new Error(`Фильм ${ticket.film} не найден`);
+          }
+          const session = film.schedule.find((s) => s.id === ticket.session);
+          if (!session) {
+            throw new Error(`Сеанс ${ticket.session} не найден`);
+          }
+          throw new Error(`Место ${seatKey} уже занято`);
+        }
+      }),
+    );
   }
 }

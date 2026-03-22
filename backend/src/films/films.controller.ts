@@ -1,14 +1,17 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { FilmsService } from './films.service';
 
 @Controller('films')
 export class FilmsController {
   constructor(private readonly filmsService: FilmsService) {}
 
-  // GET /api/afisha/films/
+  // GET /api/afisha/films/?limit=10&offset=0
   @Get()
-  findAll() {
-    return this.filmsService.findAll();
+  findAll(
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('offset', new ParseIntPipe({ optional: true })) offset?: number,
+  ) {
+    return this.filmsService.findAll(limit, offset);
   }
 
   // GET /api/afisha/films/:id/schedule

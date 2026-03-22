@@ -10,9 +10,8 @@ export class FilmsService {
     private readonly filmsRepository: IFilmsRepository,
   ) {}
 
-  async findAll(): Promise<GetFilmsResponseDTO> {
-    const items = await this.filmsRepository.findAll();
-    return { total: items.length, items };
+  async findAll(limit?: number, offset?: number): Promise<GetFilmsResponseDTO> {
+    return this.filmsRepository.findAll(limit, offset);
   }
 
   async findSchedule(filmId: string): Promise<GetScheduleResponseDTO> {
