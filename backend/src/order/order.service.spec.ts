@@ -3,7 +3,7 @@ import { BadRequestException } from '@nestjs/common';
 import * as crypto from 'node:crypto';
 import { OrderService } from './order.service';
 import { IFilmsRepository } from '../repository/films.repository.interface';
-import { FILMS_REPOSITORY } from '../repository/repository.module';
+import { FILMS_REPOSITORY } from '../repository/films.repository.interface';
 import { CreateOrderDTO, TicketDTO } from './dto/order.dto';
 
 describe('OrderService', () => {

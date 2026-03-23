@@ -6,7 +6,7 @@ import {
   OrderResponseItemDTO,
 } from './dto/order.dto';
 import * as crypto from 'node:crypto';
-import { FILMS_REPOSITORY } from '../repository/repository.module';
+import { FILMS_REPOSITORY } from '../repository/films.repository.interface';
 
 @Injectable()
 export class OrderService {

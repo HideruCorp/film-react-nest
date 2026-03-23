@@ -1,21 +1,28 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Film, FilmDocument } from './films.mongo.schema';
+import { IFilmsRepository } from './films.repository.interface';
 import { GetFilmDTO, GetScheduleDTO } from '../films/dto/films.dto';
 import { TicketDTO } from '../order/dto/order.dto';
-import { IFilmsRepository } from './films.repository.interface';
-import { FilmModel } from './films.mongo.schema';
 
 @Injectable()
 export class FilmsMongoRepository implements IFilmsRepository {
+  constructor(
+    @InjectModel(Film.name) private readonly filmModel: Model<FilmDocument>,
+  ) {}
+
   async findAll(
     limit?: number,
     offset?: number,
   ): Promise<{ total: number; items: GetFilmDTO[] }> {
-    const query = FilmModel.find({});
+    const query = this.filmModel.find({});
     if (offset) query.skip(offset);
     if (limit) query.limit(limit);
     const [films, total] = await Promise.all([
       query,
-      FilmModel.countDocuments({}),
+      this.filmModel.countDocuments({}),
     ]);
     const items = films.map((film) => ({
       id: film.id,
@@ -32,7 +39,7 @@ export class FilmsMongoRepository implements IFilmsRepository {
   }
 
   async findSchedule(filmId: string): Promise<GetScheduleDTO[]> {
-    const film = await FilmModel.findOne({ id: filmId });
+    const film = await this.filmModel.findOne({ id: filmId });
     if (!film) return [];
     return film.schedule.map((s) => ({
       id: s.id,
@@ -63,7 +70,7 @@ export class FilmsMongoRepository implements IFilmsRepository {
       tickets.map(async (ticket) => {
         const seatKey = `${ticket.row}:${ticket.seat}`;
 
-        const result = await FilmModel.findOneAndUpdate(
+        const result = await this.filmModel.findOneAndUpdate(
           {
             id: ticket.film,
             'schedule.id': ticket.session,
@@ -79,7 +86,7 @@ export class FilmsMongoRepository implements IFilmsRepository {
         );
 
         if (!result) {
-          const film = await FilmModel.findOne({ id: ticket.film });
+          const film = await this.filmModel.findOne({ id: ticket.film });
           if (!film) {
             throw new Error(`Фильм ${ticket.film} не найден`);
           }

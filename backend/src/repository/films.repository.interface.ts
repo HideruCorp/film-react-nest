@@ -1,3 +1,5 @@
+export const FILMS_REPOSITORY = 'FILMS_REPOSITORY';
+
 import { GetFilmDTO, GetScheduleDTO } from '../films/dto/films.dto';
 import { TicketDTO } from '../order/dto/order.dto';
 
