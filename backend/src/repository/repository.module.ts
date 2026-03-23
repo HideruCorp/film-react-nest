@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { databaseProvider } from './films.mongo.provider';
 import { FilmsMongoRepository } from './films.mongo.repository';
 
-export const FILMS_REPOSITORY = 'FILMS_REPOSITORY';
 
 @Module({
   providers: [

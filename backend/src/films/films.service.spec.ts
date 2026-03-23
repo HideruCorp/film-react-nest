@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { FilmsService } from './films.service';
 import { IFilmsRepository } from '../repository/films.repository.interface';
-import { FILMS_REPOSITORY } from '../repository/repository.module';
+import { FILMS_REPOSITORY } from '../repository/films.repository.interface';
 import { GetFilmDTO, GetScheduleDTO } from './dto/films.dto';
 
 describe('FilmsService', () => {
