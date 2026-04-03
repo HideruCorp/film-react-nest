@@ -1,0 +1,91 @@
+version: "3.9"
+
+volumes:
+  postgres-data:
+  pgadmin-data:
+
+networks:
+  film-network:
+    driver: bridge
+
+services:
+  # ----------------------------------------------------------
+  # Сервис: База данных PostgreSQL
+  # ----------------------------------------------------------
+  database:
+    image: postgres:16
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/pgdata
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+    networks:
+      - film-network
+    # Проверка работоспособности: пытаемся подключиться к БД
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-prac}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ----------------------------------------------------------
+  # Сервис: Бэкенд (Nest.js)
+  # ----------------------------------------------------------
+  backend:
+    # Образ из GitHub Container Registry (GHCR).
+    image: ghcr.io/hiderucorp/film-nest-backend:latest
+    restart: on-failure
+    env_file:
+      - .env
+    environment:
+      LOGGER_TYPE: ${LOGGER_TYPE}
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - film-network
+    # Проверка работоспособности: бэкенд отвечает на GET /api/afisha/films
+    healthcheck:
+      test: ["CMD-SHELL", "wget -nv -t1 --spider http://localhost:3000/api/afisha/films || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ----------------------------------------------------------
+  # Сервис: Фронтенд + Nginx (reverse proxy)
+  # ----------------------------------------------------------
+  frontend:
+    # Образ из GitHub Container Registry (GHCR).
+    # Включает React-приложение, собранное в статику, и Nginx как веб-сервер.
+    # Nginx отдаёт статику фронтенда и проксирует /api/* на бэкенд.
+    image: ghcr.io/hiderucorp/film-react-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - film-network
+
+  # ----------------------------------------------------------
+  # Сервис: pgAdmin (веб-интерфейс для PostgreSQL)
+  # Опционально — можно удалить, если не нужен
+  # ----------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8080:80"
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - film-network
