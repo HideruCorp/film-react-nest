@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppConfig } from '../app.config.provider';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { DevLogger } from './dev.logger';
 import { JsonLogger } from './json.logger';
 import { TskvLogger } from './tskv.logger';
@@ -8,6 +8,7 @@ export const APP_LOGGER = 'APP_LOGGER';
 export type LoggerType = 'tskv' | 'json' | 'dev';
 
 @Module({
+  imports: [ConfigModule],
   providers: [
     DevLogger,
     JsonLogger,
@@ -15,12 +16,12 @@ export type LoggerType = 'tskv' | 'json' | 'dev';
     {
       provide: APP_LOGGER,
       useFactory: (
-        config: AppConfig,
+        config: ConfigService,
         devLogger: DevLogger,
         jsonLogger: JsonLogger,
         tskvLogger: TskvLogger,
       ) => {
-        switch (config.logger.type) {
+        switch (config.get<LoggerType>('LOGGER_TYPE', 'tskv')) {
           case 'dev':
             return devLogger;
           case 'json':
@@ -30,7 +31,7 @@ export type LoggerType = 'tskv' | 'json' | 'dev';
             return tskvLogger;
         }
       },
-      inject: ['CONFIG', DevLogger, JsonLogger, TskvLogger],
+      inject: [ConfigService, DevLogger, JsonLogger, TskvLogger],
     },
   ],
   exports: [APP_LOGGER],

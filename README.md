@@ -1,5 +1,7 @@
 # FILM!
 
+Демо: [FILM!](http://film-daziev.students.nomorepartiessite.ru)
+
 ## Описание проекта
 
 Онлайн-сервис бронирования билетов в кинотеатр. Проект состоит из:
@@ -72,37 +74,49 @@ backend/src/
 
 ## Установка и запуск
 
-### База данных
+### Локальный запуск
+
+#### База данных
 
 Бэкенд поддерживает два драйвера. Выберите один.
 
-#### PostgreSQL (по умолчанию в `.env.example`)
+##### PostgreSQL (по умолчанию в `.env.example`)
 
 1. Установите и запустите PostgreSQL.
-2. Инициализируйте базу (создаёт пользователя `prac_user`, базу `prac` и таблицы):
+2. Создайте пользователя `prac_user` и базу `prac`:
 
 ```bash
-psql -U postgres -f backend/test/prac.init.sql
+psql -U postgres
 ```
 
-3. Загрузите тестовые данные (опционально):
+```sql
+CREATE USER prac_user WITH PASSWORD 'prac_password';
+CREATE DATABASE prac OWNER prac_user;
+\q
+```
+
+3. Инициализируйте схему таблиц:
+
+```bash
+psql -U prac_user -d prac -f backend/test/prac.init.sql
+```
+
+4. Загрузите тестовые данные (опционально):
 
 ```bash
 psql -U prac_user -d prac -f backend/test/prac.films.sql
 psql -U prac_user -d prac -f backend/test/prac.schedules.sql
 ```
 
-#### MongoDB
+##### MongoDB
 
 1. Установите и запустите MongoDB.
 2. Импортируйте начальные данные (опционально):
 
-```bash
-# Через MongoDB Compass: Add Data → Import JSON or CSV file
-# Файл: backend/test/mongodb_initial_stub.json
-```
+Через MongoDB Compass: Add Data → Import JSON or CSV file
+Файл: backend/test/mongodb_initial_stub.json
 
-### Бэкенд
+#### Бэкенд
 
 Перейдите в папку бэкенда:
 
@@ -149,7 +163,7 @@ npm run start:dev
 
 Бэкенд будет доступен на `http://localhost:3000`
 
-### Фронтенд
+#### Фронтенд
 
 Откройте новую консоль и перейдите в папку фронтенда:
 
@@ -170,6 +184,112 @@ npm run dev
 ```
 
 Фронтенд будет доступен на `http://localhost:5173`
+
+### Docker-развёртывание на сервере
+
+Этот вариант использует готовые образы из GHCR и root `docker-compose.yml`. На сервере не нужен исходный код приложения целиком — достаточно `docker-compose.yml`, `.env` и файлов инициализации в `backend/test/`.
+
+**Подготовьте директорию на сервере:**
+
+```bash
+mkdir -p ~/film-app/backend/test
+cd ~/film-app
+```
+
+**Скачайте compose, env-шаблон и init-файлы из репозитория:**
+
+```bash
+curl -fsSLO https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/docker-compose.yml
+curl -fsSLO https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/.env.example
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/backend/test/init.sh -o backend/test/init.sh
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/backend/test/prac.init.sql -o backend/test/prac.init.sql
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/backend/test/prac.films.sql -o backend/test/prac.films.sql
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/backend/test/prac.schedules.sql -o backend/test/prac.schedules.sql
+chmod 700 backend/test/init.sh
+```
+
+**Создайте production `.env`:**
+
+```bash
+cp .env.example .env
+nano .env
+chmod 600 .env
+```
+
+Пример значений:
+
+```dotenv
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=your_strong_postgres_password
+
+PORT=3000
+DATABASE_DRIVER=postgres
+DATABASE_HOST=database
+DATABASE_PORT=5432
+DATABASE_USERNAME=prac_user
+DATABASE_PASSWORD=your_strong_app_password
+DATABASE_NAME=prac
+LOGGER_TYPE=json
+
+PGADMIN_DEFAULT_EMAIL=admin@example.com
+PGADMIN_DEFAULT_PASSWORD=your_pgadmin_password
+```
+
+**Авторизуйтесь в GHCR и запустите сервисы:**
+
+```bash
+echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_GITHUB_USERNAME --password-stdin
+docker compose pull
+docker compose up -d
+```
+
+`db-init` автоматически:
+- создаёт пользователя `prac_user` и базу `prac`;
+- применяет `backend/test/prac.init.sql`;
+- загружает тестовые данные из `backend/test/prac.films.sql` и `backend/test/prac.schedules.sql`.
+
+**Проверка:**
+
+```bash
+docker compose ps
+docker compose logs -f backend
+curl http://localhost:3000/api/afisha/films/
+```
+
+### Настройка HTTPS
+
+Убедитесь, что в `.env` заданы переменные:
+
+```dotenv
+DOMAIN=ваш-домен.example.com
+CERTBOT_EMAIL=ваш@email.com
+```
+
+Затем выполните на сервере:
+
+```bash
+bash deploy/setup-https.sh
+```
+
+Скрипт:
+1. Устанавливает `certbot`
+2. Временно останавливает контейнер `frontend` (освобождает порт 80)
+3. Получает SSL-сертификат от Let's Encrypt через `certbot standalone`
+4. Генерирует `deploy/nginx/https.active.conf` (подстановка домена через `envsubst`)
+5. Генерирует `docker-compose.override.yml` — Docker Compose подхватывает его автоматически:
+   - Контейнер `frontend` получает дополнительный порт `443:443`
+   - Сертификаты монтируются из `/etc/letsencrypt` в контейнер
+   - Сгенерированный nginx-конфиг монтируется поверх стандартного
+6. Запускает `docker compose up -d`
+7. Настраивает автоматическое обновление сертификата через `renewal-hooks`
+
+После настройки приложение доступно по HTTPS. Обновление образов:
+
+```bash
+docker compose pull
+docker compose up -d
+docker image prune -f
+```
 
 ## Тестирование
 
