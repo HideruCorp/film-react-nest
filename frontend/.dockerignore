@@ -1,0 +1,26 @@
+# Зависимости — будут установлены внутри контейнера заново
+node_modules/
+
+# Результат предыдущей сборки — будет создан заново внутри контейнера
+dist/
+build/
+
+# Файлы Docker — не нужны внутри образа
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Документация
+README.md
+*.md
+
+# Файлы IDE и OS
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Переменные окружения
+.env
+.env.local
+.env.*.local

@@ -1,0 +1,34 @@
+# Зависимости — будут установлены внутри контейнера
+node_modules/
+
+# Результат предыдущей сборки — будет пересоздан внутри контейнера
+dist/
+
+# Файлы Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Документация
+README.md
+*.md
+
+# Файлы IDE и OS
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Переменные окружения
+.env
+.env.local
+
+# Тестовые файлы и данные
+test/
+*.spec.ts
+*.test.ts
+coverage/
+
+# Временные файлы
+*.tmp
+*.swp
