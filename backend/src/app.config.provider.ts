@@ -1,4 +1,5 @@
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LoggerType } from './logger/logger.module';
 
 export const configProvider = {
   imports: [ConfigModule.forRoot()],
@@ -16,12 +17,16 @@ export const configProvider = {
       password: configService.get<string>('DATABASE_PASSWORD', ''),
       database: configService.get<string>('DATABASE_NAME', 'prac'),
     },
+    logger: {
+      type: configService.get<LoggerType>('LOGGER_TYPE', 'tskv'),
+    },
   }),
   inject: [ConfigService],
 };
 
 export interface AppConfig {
   database: AppConfigDatabase;
+  logger: AppConfigLogger;
 }
 
 export interface AppConfigDatabase {
@@ -34,4 +39,8 @@ export interface AppConfigDatabase {
   username: string;
   password: string;
   database: string;
+}
+
+export interface AppConfigLogger {
+  type: LoggerType;
 }
