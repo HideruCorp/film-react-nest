@@ -101,6 +101,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      SCRIPT_NAME: /admin
     ports:
       - "8080:80"
     volumes:

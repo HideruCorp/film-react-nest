@@ -1,6 +1,8 @@
 # FILM!
 
-Демо: [FILM!](http://film-daziev.students.nomorepartiessite.ru)
+- Демо: [FILM!](https://film-daziev.students.nomorepartiessite.ru)
+- API: [FILM! API](https://film-daziev.students.nomorepartiessite.ru/api/afisha/films)
+- pgAdmin: [FILM! pgAdmin](https://film-daziev.students.nomorepartiessite.ru/admin/)
 
 ## Описание проекта
 
@@ -268,6 +270,10 @@ CERTBOT_EMAIL=ваш@email.com
 Затем выполните на сервере:
 
 ```bash
+mkdir -p ~/film-app/deploy/nginx
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/deploy/setup-https.sh -o deploy/setup-https.sh
+curl -fsSL https://raw.githubusercontent.com/HideruCorp/film-react-nest/main/deploy/nginx/https.conf -o deploy/nginx/https.conf
+chmod 700 deploy/setup-https.sh
 bash deploy/setup-https.sh
 ```
 
@@ -297,21 +303,21 @@ docker image prune -f
 
 ```bash
 cd backend
-npm test                # запуск всех тестов
-npm test:watch          # запуск в watch-режиме
-npm run test:cov        # запуск с покрытием кода
+yarn test                # запуск всех тестов
+yarn test:watch          # запуск в watch-режиме
+yarn run test:cov        # запуск с покрытием кода
 ```
 
 Проверка линтера:
 
 ```bash
-npm run lint
+yarn lint
 ```
 
 Сборка проекта:
 
 ```bash
-npm run build
+yarn build
 ```
 
 ## OpenAPI спецификация
